@@ -23,10 +23,20 @@ jobs:
           npm install --no-save playwright@1.56.1
           npx playwright install --with-deps chromium
       - name: Prepare official handwritten sample
-        run: python3 scripts/fetch_official_mathwriting.py --out benchmark-fixtures --offsets 0
+        run: python3 scripts/fetch_official_mathwriting.py --out benchmark-fixtures --offsets 0,3,7,11,19,27
       - name: Launch app
         run: |
           python3 -m http.server 8000 --bind 127.0.0.1 >/tmp/http.log 2>&1 &
           sleep 2
       - name: Execute real CoMER browser OCR
         run: node tests/handwriting-comer-browser.mjs
+      - name: Upload CoMER handwriting metrics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: comer-handwriting-benchmark
+          path: |
+            benchmark-results/comer-results.json
+            benchmark-results/comer-summary.md
+          if-no-files-found: warn
+          retention-days: 30
