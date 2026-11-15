@@ -15,7 +15,7 @@ c.addEventListener('pointerdown',e=>{if(!image)return;anchor=loc(e);c.setPointer
 c.addEventListener('pointermove',e=>{if(!anchor)return;const p=loc(e);selection=clampSelection(anchor.x,anchor.y,p.x,p.y,c.width,c.height);render();});
 c.addEventListener('pointerup',()=>{anchor=null;if(selection&&(selection.w<4||selection.h<4))selection=null;render();});
 $('reset').onclick=()=>{selection=null;render();};
-$('recognize').onclick=async()=>{try{status('Attempting local model inference…');const source=extractCrop(image,selection);$('latex').value=await recognizeMath(source,{base:$('modelBase').value.trim(),onProgress:message=>status(message)});updatePreview();status('Recognition completed by local browser ONNX inference. Verify the output against your source image.');}catch(e){status('Recognition failed: '+e.message,true);}};
+$('recognize').onclick=async()=>{const button=$('recognize');button.disabled=true;try{status('Attempting local model inference…');const source=extractCrop(image,selection);$('latex').value=await recognizeMath(source,{base:$('modelBase').value.trim(),onProgress:message=>status(message)});updatePreview();status('Recognition completed by local browser ONNX inference. Verify the output against your source image.');}catch(e){status('Recognition failed: '+e.message,true);}finally{button.disabled=!image;}};
 function updatePreview(){const value=$('latex').value.trim();const p=$('preview');p.textContent=value?`\\[${value}\\]`:'Enter LaTeX to preview.';if(value&&window.MathJax?.typesetPromise)window.MathJax.typesetPromise([p]).catch(e=>status(`MathJax: ${e.message}`,true));}
 $('latex').oninput=updatePreview;
 $('copy').onclick=async()=>{await navigator.clipboard.writeText($('latex').value);status('Copied LaTeX.');};
