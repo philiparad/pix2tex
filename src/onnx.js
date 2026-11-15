@@ -57,13 +57,15 @@ export async function loadModel(base=DEFAULT_MODEL_BASE,onProgress=()=>{}){
   if(loaded && base===loadedBase) return loaded;
   const ort=await getOrt();
   const urls=Object.fromEntries(modelPaths(base).map(item=>[item.name,item.url]));
+  onProgress('Loading ONNX size predictor…');
+  const resizer=await createSession(ort,urls['image_resizer.onnx']);
   onProgress('Loading vision encoder (large download on first use)…');
   const encoder=await createSession(ort,urls['encoder.onnx']);
   onProgress('Loading autoregressive LaTeX decoder…');
   const decoder=await createSession(ort,urls['decoder.onnx']);
   onProgress('Loading tokenizer…');
   const tokenizer=await readJson(urls['tokenizer.json']);
-  loaded={ort,encoder,decoder,tokenizer};
+  loaded={ort,resizer,encoder,decoder,tokenizer};
   loadedBase=base;
   return loaded;
 }
@@ -72,9 +74,19 @@ function firstOutput(session,outputs) {
 }
 export async function recognizeMath(canvas,{base=DEFAULT_MODEL_BASE,onProgress=()=>{},maxTokens=MAX_TOKENS}={}) {
   if(!canvas) throw new Error('Choose an image first.');
-  const {ort,encoder,decoder,tokenizer}=await loadModel(base,onProgress);
+  const {ort,resizer,encoder,decoder,tokenizer}=await loadModel(base,onProgress);
   onProgress('Preparing formula image…');
-  const normalized=preprocessCanvas(canvas);
+  let normalized=preprocessCanvas(canvas);
+  if(resizer.inputNames.length!==1)throw new Error('Unsupported resizer input signature');
+  for(let attempt=0;attempt<4;attempt++){
+    const sizeInput=new ort.Tensor('float32',normalized.data,normalized.dims);
+    const sizeOutputs=await resizer.run({[resizer.inputNames[0]]:sizeInput});
+    const scores=firstOutput(resizer,sizeOutputs);
+    const predictedWidth=(lastTokenArgmax(scores)+1)*32;
+    onProgress('Size predictor: '+predictedWidth+'px (current '+normalized.width+'px)');
+    if(Math.abs(predictedWidth-normalized.width)<32)break;
+    normalized=preprocessCanvas(canvas,{targetWidth:Math.min(672,Math.max(32,predictedWidth))});
+  }
   const input=new ort.Tensor('float32',normalized.data,normalized.dims);
   if(encoder.inputNames.length!==1) throw new Error('Unsupported encoder input signature: '+encoder.inputNames.join(', '));
   onProgress('Encoding image…');
