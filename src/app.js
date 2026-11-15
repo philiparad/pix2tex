@@ -1,14 +1,15 @@
 import {loadImage,extractCrop,clampSelection} from './image.js';
 import {checkModelAssets,inspectEncoder,recognizeMath,DEFAULT_MODEL_BASE} from './onnx.js';
 import {recognizeHandwriting} from './handwriting.js';
+import {recognizeComer} from './comer.js';
 import {splitCanvasFormulas,joinFormulaLatex} from './segment.js';
 const $=id=>document.getElementById(id);
 let image=null, selection=null, anchor=null;
 $('modelBase').value=DEFAULT_MODEL_BASE;
 $('engine').addEventListener('change',()=>{
-  const handwritten=$('engine').value==='handwritten';
+  const handwritten=$('engine').value==='comer';
   $('engineNote').textContent=handwritten
-    ? 'Experimental MathWriting-trained model. Large download on first use. Crop exactly one handwritten expression; verify every symbol.'
+    ? 'Experimental CoMER handwriting model (~7.2 MB). Crop exactly one handwritten equation and verify the result manually.'
     : 'Crop exactly one printed formula. Multiple expressions in a single crop may produce incorrect LaTeX.';
 });
 function status(message,error=false){$('status').textContent=message;$('status').classList.toggle('error',error);}
@@ -24,7 +25,9 @@ c.addEventListener('pointermove',e=>{if(!anchor)return;const p=loc(e);selection=
 c.addEventListener('pointerup',()=>{anchor=null;if(selection&&(selection.w<4||selection.h<4))selection=null;render();});
 $('reset').onclick=()=>{selection=null;render();};
 $('recognize').onclick=async()=>{const button=$('recognize');button.disabled=true;try{status('Attempting local model inference…');const source=extractCrop(image,selection);
-const recognize=canvas=>$('engine').value==='handwritten'
+const recognize=canvas=>$('engine').value==='comer'
+  ? recognizeComer(canvas,{onProgress:message=>status(message)})
+  : $('engine').value==='handwritten'
   ? recognizeHandwriting(canvas,{onProgress:message=>status(message)})
   : recognizeMath(canvas,{base:$('modelBase').value.trim(),onProgress:message=>status(message)});
 if($('splitExpressions').checked){
