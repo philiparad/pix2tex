@@ -1,0 +1,1 @@
+{"name":"pix2tex-browser","version":"0.1.0","private":true,"type":"module","description":"Browser-only ONNX pix2tex development starter for Teacher-Board","scripts":{"test":"node --test tests/*.test.mjs","serve":"python -m http.server 8000"},"license":"MIT"}

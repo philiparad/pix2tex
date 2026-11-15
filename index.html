@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>pix2tex · Browser Math OCR</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23254470'/%3E%3Ctext x='32' y='43' font-size='37' text-anchor='middle' fill='white'%3E%CE%A3%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="./style.css">
+<script>window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg:{fontCache:'global'}};</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body><main class="app">
+<header><div class="mark">∑</div><div><h1>pix2tex <span>Browser Lab</span></h1><p>Mathematical images to editable LaTeX · local-first development</p></div></header>
+<section class="status" id="status" role="status" aria-live="polite">Ready. Upload, paste, or drop an image of one mathematical expression.</section>
+<section class="grid">
+<div class="panel"><h2>1 · Select expression</h2><label class="drop" id="drop" for="file"><strong>Choose an image or drop it here</strong><small>PNG, JPEG, WebP · Ctrl+V also works</small><input type="file" id="file" accept="image/png,image/jpeg,image/webp"></label><div class="imgwrap"><canvas id="canvas" aria-label="Image preview and crop selection"></canvas><p id="empty">Image preview appears here.</p></div><p class="note">Drag a rectangle on the preview to crop an individual formula. Use Reset crop to revert.</p><div class="actions"><button id="reset" type="button" class="soft">Reset crop</button><button id="recognize" type="button" disabled>Recognize math</button></div></div>
+<div class="panel"><h2>2 · LaTeX output</h2><label for="latex">Editable expression</label><textarea id="latex" spellcheck="false" placeholder="Recognized LaTeX appears here..."></textarea><div class="actions"><button class="soft" id="copy" type="button">Copy LaTeX</button><button class="soft" id="copyMathJax" type="button">Copy MathJax</button><button id="insert" type="button">Send to Teacher-Board</button></div><h3>Live MathJax preview</h3><div class="preview" id="preview">Enter LaTeX to preview.</div><p class="note">Teacher-Board integration sends a <code>pix2tex:result</code> message to a parent or opener window only after a click.</p></div>
+</section>
+<section class="panel model"><h2>3 · Model diagnostics <span class="pill">Development milestone</span></h2><p>The ONNX model files are not bundled in this starter. Use the diagnostics to test local model deployment. Actual image recognition remains under implementation and is deliberately not simulated.</p><label for="modelBase">Model directory URL</label><input id="modelBase" value="./models/" spellcheck="false"><div class="actions"><button id="checkModels" class="soft">Check model assets</button><button id="inspectModel" class="soft">Inspect ONNX encoder</button></div><pre id="diagnostics" aria-live="polite">Expected: image_resizer.onnx, encoder.onnx, decoder.onnx, tokenizer.json</pre></section>
+<footer>MIT starter · Browser HTML/CSS/JS · No Python service or API keys</footer></main><script type="module" src="./src/app.js"></script></body></html>

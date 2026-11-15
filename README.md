@@ -1,0 +1,74 @@
+# pix2tex Browser — Teacher-Board integration
+
+**Status: v0.1 development starter, not yet a working OCR implementation.** This repository is intended for a browser-only image-to-LaTeX converter hosted as static files on GitHub Pages.
+
+## Implemented
+
+- Responsive HTML/CSS/JS page, no React or production server requirement.
+- Image upload, drag/drop, clipboard paste and formula crop selection.
+- Client-side image conversion utilities, editable LaTeX and live MathJax preview.
+- Explicit `pix2tex:result` bridge to a same-origin parent/opener page on button click.
+- ONNX asset checks and encoder session metadata diagnostics using ONNX Runtime Web.
+- Node built-in unit tests for crop selection.
+
+## NOT YET implemented
+
+**The Recognize button intentionally reports that model inference is missing.** The exact preprocessing, model tensor signatures, autoregressive decoder loop, tokenizer handling, and EOS behavior require validation against an ONNX export. The project does not pretend that typed LaTeX was recognized from a photograph.
+
+## Model source and attribution
+
+Original pix2tex: https://github.com/lukas-blecher/LaTeX-OCR (ViT/ResNet encoder, transformer decoder).
+
+Candidate existing ONNX export: https://github.com/RapidAI/RapidLatexOCR
+
+Candidate hosted model files: https://huggingface.co/inYourOwnBrowser/rapid-latex-ocr-onnx (image_resizer.onnx, encoder.onnx, decoder.onnx, tokenizer.json). Their documentation describes ~179MB of assets and client-side use, but those weights are not bundled here. Review licensing and upstream checksum / revision before use.
+
+## Start locally
+
+Run `python -m http.server 8000` then visit http://localhost:8000. Tests: `node --test tests/*.test.mjs`.
+
+To check assets, place files in `models/`, then select Check model assets or Inspect ONNX encoder. The model files can also be served from a trusted CORS-enabled URL, but same-origin hosting is recommended for reliability.
+
+## Deployment
+
+1. Create a **public** GitHub repository named `pix2tex` in the desired account.
+2. Upload the contents of this archive to the repository root.
+3. Settings → Pages → Deploy from a branch → main / (root).
+4. The GitHub Pages URL should be `https://philiparad.github.io/pix2tex/` after activation, assuming the `philiparad` account owns the repository.
+
+GitHub Pages serves static content and **cannot** run Python inference services. Keep OCR inference within browser JavaScript/WASM/WebGPU.
+
+## Teacher-Board integration contract
+
+On a user click the page sends the object:
+
+```js
+{type:'pix2tex:result',latex:'\\frac{a}{b}',source:'pix2tex-browser-lab',version:1}
+```
+
+Host listener example (use only when served from the same origin):
+
+```js
+window.addEventListener('message', (event) => {
+  if (event.origin !== window.location.origin) return;
+  if (event.data?.type !== 'pix2tex:result') return;
+  const latex = event.data.latex;
+  // insert latex in Teacher-Board's editor
+});
+```
+
+For embedded cross-origin origins, define and validate an explicit allowlist and change `postMessage` target origin accordingly. Never use `'*'` for a trusted integration unless requirements justify it.
+
+## Next implementation milestones
+
+1. Pin model export revision and record SHA256 checksums.
+2. Reproduce pix2tex preprocessing (including resize, padding, grayscale inversion and exact normalization) against Python baseline.
+3. Inspect all ONNX input/output tensor types and dimensions; implement encoder and optional resizer.
+4. Implement autoregressive decoder with proper shape handling, masks, BOS/EOS, tokenization and generation limits.
+5. Implement WASM fallback, optional WebGPU acceleration, and progress reporting.
+6. Add image/LaTeX gold fixtures; measure character and expression accuracy, latency, memory, and MathJax compatibility.
+7. Implement crop-to-board flow after recognition is validated.
+
+## Security notes
+
+Images are processed in memory and not uploaded by application code. ONNX runtime, MathJax scripts and optional weights currently refer to third-party origins and therefore require an internet connection on first load. Use pinned/self-hosted assets before claiming an offline release.
