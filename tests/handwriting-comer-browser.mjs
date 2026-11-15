@@ -30,24 +30,24 @@ try{
   }
 
   // Full application integration on actual held-out handwritten input.
-  const page=await browser.newPage();
-  await page.goto('http://127.0.0.1:8000/index.html',{waitUntil:'domcontentloaded'});
-  await page.locator('#engine').selectOption('comer');
+  const uiPage=await browser.newPage();
+  await uiPage.goto('http://127.0.0.1:8000/index.html',{waitUntil:'domcontentloaded'});
+  await uiPage.locator('#engine').selectOption('comer');
   const sample=manifest.items[0];
-  await page.locator('#file').setInputFiles({
+  await uiPage.locator('#file').setInputFiles({
     name:'handwritten-equation.png',mimeType:'image/png',
     buffer:readFileSync('benchmark-fixtures/'+sample.file)
   });
-  await page.locator('#recognize').click();
-  await page.waitForFunction(()=>{
+  await uiPage.locator('#recognize').click();
+  await uiPage.waitForFunction(()=>{
     const status=document.getElementById('status').textContent;
     return status.includes('Recognition completed')||status.includes('Recognition failed');
   },null,{timeout:180000});
-  const status=await page.locator('#status').textContent();
+  const status=await uiPage.locator('#status').textContent();
   if(!status.includes('Recognition completed'))throw new Error('CoMER UI failed: '+status);
-  const prediction=await page.locator('#latex').inputValue();
+  const prediction=await uiPage.locator('#latex').inputValue();
   if(!prediction.trim())throw new Error('CoMER UI returned empty LaTeX');
-  await page.locator('#preview svg').first().waitFor({timeout:15000});
+  await uiPage.locator('#preview svg').first().waitFor({timeout:15000});
   console.log('COMER_HANDWRITING_UI_PASSED',JSON.stringify({expected:sample.latex,prediction}));
 }finally{await browser.close();}
 const summary=summarize(results);
