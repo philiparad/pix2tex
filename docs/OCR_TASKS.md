@@ -35,3 +35,9 @@ This evidence validates a **small, typeset-image sample**, not handwriting, broa
 ## Browser UI and Teacher-Board contract
 
 The headless Chromium workflow verifies that an uploaded PNG can be recognized from the UI, inserted into the editable LaTeX field, and rendered via MathJax. It also verifies a same-origin popup sends `{type:'pix2tex:result',latex:'x+1=2',source:'pix2tex-browser-lab',version:1}` to its opener. This validates the transport contract, **not** actual insertion into Teacher-Board's document model.
+
+## Handwritten mathematics benchmark — completed first measurement (2026-11-15)
+
+Implementation: [handwriting benchmark protocol](HANDWRITING_BENCHMARK.md). Results and provenance: [HF handwritten baseline](HWR_BASELINE_2026-11-15.md), [official Google baseline](HWR_OFFICIAL_BASELINE_2026-11-15.md). Both six-image test sets returned **0/6 exact matches**. The original Python RapidLaTeXOCR model also returned **0/6** on the official Google images; see workflow [parity run](https://github.com/philiparad/pix2tex/actions/runs/43722321780).
+
+**Status:** benchmark infrastructure implemented and verified; handwriting recognition quality **FAILED** the readiness gate. Next work: (1) larger held-out benchmark, (2) handwriting-trained model selection, (3) normalized image parity, (4) false-positive confidence detection, (5) teacher review workflow.
