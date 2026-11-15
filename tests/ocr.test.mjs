@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {BOS,EOS,lastTokenArgmax,decodeTokens,modelInputFeed} from '../src/decoder.js';
+import {BOS,EOS,lastTokenArgmax,decodeTokens,cleanLatex,modelInputFeed} from '../src/decoder.js';
 import {nextStride,constrainSize,boundsOfInk} from '../src/preprocess.js';
 
 test('BOS/EOS match RapidLaTeXOCR',()=>{
@@ -30,4 +30,12 @@ test('ink bounds respect transparent white and black text',()=>{
   for(let i=0;i<6;i++){px[i*4]=255;px[i*4+1]=255;px[i*4+2]=255;px[i*4+3]=255;}
   px[4]=0;px[5]=0;px[6]=0;
   assert.deepEqual(boundsOfInk(px,3,2),{x:1,y:0,w:1,h:1});
+});
+
+test('OCR LaTeX cleanup removes unnecessary math token spaces',()=>{
+  assert.equal(cleanLatex(String.raw`\frac { x } { 2 }`),String.raw`\frac{x}{2}`);
+  assert.equal(cleanLatex('x ^ { 2 } + 1 = 0'),'x^{2}+1=0');
+});
+test('OCR cleanup preserves whitespace in text groups',()=>{
+  assert.equal(cleanLatex(String.raw`\text{hello world} + x`),String.raw`\text{hello world}+x`);
 });
