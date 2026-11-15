@@ -86,3 +86,15 @@ Images are processed in memory and not uploaded by application code. ONNX runtim
 The dedicated GitHub Actions workflow [Real ONNX browser smoke test](.github/workflows/ocr-browser.yml) loads actual models in Chromium. Its fixtures cover a linear equation, an exponent, a fraction, and a square root; all four produced the expected LaTeX in the first verified run. A later commit added strict assertions for all four. The original Python model was run on the same linear-equation PNG and returned the same expression.
 
 Please do not equate this small sample with general accuracy. Before classroom rollout, test handwritten formulas, photographed worksheets, long fractions, matrices, systems, roots, and ambiguous notation on actual student material.
+
+## Real handwritten-mathematics benchmark
+
+This repository now contains a **separate genuine-human handwriting benchmark**, not a synthetic handwriting-font test.
+
+- Methodology, data source, metrics and limitations: [docs/HANDWRITING_BENCHMARK.md](docs/HANDWRITING_BENCHMARK.md)
+- Workflow: [Handwritten math OCR benchmark](.github/workflows/handwriting-benchmark.yml) (Actions → Run workflow)
+- First run uses six preselected **MathWriting-human test** images with labels, image hashes, and provenance. No sample is selected based on the model's predictions.
+- Scores: exact LaTeX expression accuracy, character error rate, inference coverage, median/p95 latency and per-example errors. Test results are provided as GitHub Actions artifacts.
+- The workflow acquires test images temporarily and does not commit or publish source images to the repository.
+
+**Do not claim handwriting accuracy without a completed real-image benchmark.** The four previously passed examples were MathJax-typeset, not handwritten. The initial six samples are an engineering smoke benchmark, not a statistically representative accuracy estimate.
