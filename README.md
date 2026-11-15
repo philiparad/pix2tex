@@ -31,10 +31,14 @@ To check assets, place files in `models/`, then select Check model assets or Ins
 
 ## Deployment
 
-1. Create a **public** GitHub repository named `pix2tex` in the desired account.
-2. Upload the contents of this archive to the repository root.
-3. Settings → Pages → Deploy from a branch → main / (root).
-4. The GitHub Pages URL should be `https://philiparad.github.io/pix2tex/` after activation, assuming the `philiparad` account owns the repository.
+1. The public repository `philiparad/pix2tex` already exists, and `main` contains `index.html` at repository root.
+2. Open **Settings → Pages** in GitHub.
+3. Under **Build and deployment**, set **Source: Deploy from a branch**, **Branch: main**, **Folder: / (root)**, then click **Save**.
+4. Confirm the GitHub Pages URL `https://philiparad.github.io/pix2tex/` returns the UI, and that `style.css` and `src/app.js` load without errors in the browser's Network panel.
+5. Verify that image selection and LaTeX/MathJax preview work; note that actual OCR remains unimplemented until an ONNX inference pipeline is added.
+6. The repository includes `.nojekyll` to publish static assets without Jekyll processing.
+
+**Deployment verification note (2026-11-15):** The repository contents were checked, but the live GitHub Pages site could not be confirmed from the available tools. GitHub Pages settings must be checked in the repository UI. No OCR functionality is claimed.
 
 GitHub Pages serves static content and **cannot** run Python inference services. Keep OCR inference within browser JavaScript/WASM/WebGPU.
 
