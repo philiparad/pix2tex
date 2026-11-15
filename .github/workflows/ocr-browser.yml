@@ -34,6 +34,21 @@ jobs:
         run: |
           python3 -m pip install --break-system-packages rapid_latex_ocr
           python3 - <<'PY'
+          import json
+          import numpy as np
+          from PIL import Image
           from rapid_latex_ocr import LaTeXOCR
-          print('Python baseline:', LaTeXOCR()('/tmp/pix2tex-benchmark.png'))
+          model=LaTeXOCR()
+          print('Python baseline:',model('/tmp/pix2tex-benchmark.png'))
+          raw=np.array(Image.open('/tmp/pix2tex-benchmark.png').convert('RGB'))
+          ref=model.loop_image_resizer(raw)
+          browser=json.load(open('/tmp/pix2tex-browser-tensor.json'))
+          js=np.array(browser['data'],dtype=np.float32).reshape(browser['dims'])
+          print('Python tensor shape:',ref.shape,'min/max/mean:',ref.min(),ref.max(),ref.mean())
+          print('Browser tensor shape:',js.shape,'min/max/mean:',js.min(),js.max(),js.mean())
+          if ref.shape==js.shape:
+              print('Tensor mean absolute error:',np.mean(np.abs(ref-js)))
+              print('Tensor max absolute error:',np.max(np.abs(ref-js)))
+          else:
+              print('Tensor shape mismatch: compare preprocessing and resizer sequence')
           PY
