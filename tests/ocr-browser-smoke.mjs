@@ -28,7 +28,7 @@ try{
     const x=c.getContext('2d',{willReadFrequently:true});x.fillStyle='white';x.fillRect(0,0,c.width,c.height);
     x.drawImage(image,0,0);
     const progress=[];
-    const latex=await recognizeMath(c,{maxTokens:80,diagnosticWidth:64,onProgress:message=>{if(progress.length<24)progress.push(message)}});
+    const latex=await recognizeMath(c,{maxTokens:80,onProgress:message=>{if(progress.length<24)progress.push(message)}});
     const tensor=preprocessCanvas(c,{targetWidth:64});
     const initial=preprocessCanvas(c);
     return {latex,progress,tensor:{dims:tensor.dims,data:Array.from(tensor.data)},initial:{dims:initial.dims,mean:initial.data.reduce((a,b)=>a+b,0)/initial.data.length}};
