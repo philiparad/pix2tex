@@ -98,31 +98,65 @@ export async function recognizeMath(canvas,{base=DEFAULT_MODEL_BASE,onProgress=(
     ratio=width/normalized.width;
   }
   if(diagnosticWidth!==null)normalized=preprocessCanvas(canvas,{targetWidth:diagnosticWidth});
-  const input=new ort.Tensor('float32',normalized.data,normalized.dims);
   if(encoder.inputNames.length!==1) throw new Error('Unsupported encoder input signature: '+encoder.inputNames.join(', '));
-  onProgress('Encoding image…');
-  const encoderOutputs=await encoder.run({[encoder.inputNames[0]]:input});
-  const context=firstOutput(encoder,encoderOutputs);
-  const ids=[BOS];
   if(decoder.inputNames.length!==3) throw new Error('Unsupported decoder signature: '+decoder.inputNames.join(', '));
-  for(let step=0;step<maxTokens;step++){
-    const n=ids.length;
-    const tokens=new ort.Tensor('int64',BigInt64Array.from(ids,BigInt),[1,n]);
-    const mask=new ort.Tensor('bool',new Uint8Array(n).fill(1),[1,n]);
-    // Match upstream order: tokens, attention mask, encoder context.
-    const feeds=modelInputFeed(decoder,[tokens,mask,context]);
-    const result=await decoder.run(feeds);
-    const next=lastTokenArgmax(firstOutput(decoder,result));
-    if(next===EOS)break;
-    ids.push(next);
-    if(step%8===0){
-      onProgress('Decoding LaTeX: '+(step+1)+' tokens…');
-      // Allow UI to paint while synchronous WASM inference is running.
-      await new Promise(resolve=>setTimeout(resolve,0));
+
+  async function infer(prepared,label) {
+    const input=new ort.Tensor('float32',prepared.data,prepared.dims);
+    onProgress('Encoding '+label+' ('+prepared.width+'×'+prepared.height+')…');
+    const encoderOutputs=await encoder.run({[encoder.inputNames[0]]:input});
+    const context=firstOutput(encoder,encoderOutputs);
+    const ids=[BOS];
+    let sumLogProb=0, tokenCount=0;
+    let terminated=false;
+    for(let step=0;step<maxTokens;step++){
+      const n=ids.length;
+      const tokens=new ort.Tensor('int64',BigInt64Array.from(ids,BigInt),[1,n]);
+      const mask=new ort.Tensor('bool',new Uint8Array(n).fill(1),[1,n]);
+      const feeds=modelInputFeed(decoder,[tokens,mask,context]);
+      const outputs=await decoder.run(feeds);
+      const logits=firstOutput(decoder,outputs);
+      const next=lastTokenArgmax(logits);
+      const vocab=logits.dims[logits.dims.length-1];
+      const offset=logits.data.length-vocab;
+      let denominator=0,peak=Number(logits.data[offset+next]);
+      for(let k=0;k<vocab;k++)denominator+=Math.exp(Number(logits.data[offset+k])-peak);
+      sumLogProb-=Math.log(denominator);
+      tokenCount++;
+      if(next===EOS){terminated=true;break;}
+      ids.push(next);
+      if(step%12===0){
+        onProgress('Decoding '+label+': '+(step+1)+' tokens…');
+        await new Promise(resolve=>setTimeout(resolve,0));
+      }
     }
-    if(step===maxTokens-1)throw new Error('Maximum LaTeX length reached before EOS; try cropping a smaller formula.');
+    if(!terminated)throw new Error('Decoder reached the token limit before EOS at '+label);
+    const expression=cleanLatex(decodeTokens(tokenizer,ids.slice(1)));
+    if(!expression)throw new Error('Empty LaTeX from '+label);
+    return {expression,confidence:sumLogProb/tokenCount,width:prepared.width};
   }
-  const expression=cleanLatex(decodeTokens(tokenizer,ids.slice(1)));
-  if(!expression)throw new Error('Model produced an empty LaTeX expression.');
-  return expression;
+
+  const firstWidth=normalized.width;
+  const widths=[firstWidth];
+  // Local multi-scale comparison mitigates small preprocessing differences
+  // between browser Canvas and PIL which can shift the resize classifier.
+  // A maximum of three nearby widths bounds on-device compute.
+  if(diagnosticWidth===null){
+    if(firstWidth>64)widths.push(firstWidth-32);
+    if(firstWidth>96)widths.push(firstWidth-64);
+  }
+  const candidates=[];
+  const errors=[];
+  for(const width of widths){
+    try{
+      const prepared=width===firstWidth?normalized:preprocessCanvas(canvas,{targetWidth:width});
+      const candidate=await infer(prepared,'width '+width);
+      candidates.push(candidate);
+      onProgress('Width '+width+': score '+candidate.confidence.toFixed(4));
+    }catch(error){errors.push('width '+width+': '+error.message);}
+  }
+  if(!candidates.length)throw new Error('All model candidates failed: '+errors.join('; '));
+  candidates.sort((a,b)=>b.confidence-a.confidence);
+  onProgress('Selected '+candidates[0].width+'px (confidence '+candidates[0].confidence.toFixed(4)+')');
+  return candidates[0].expression;
 }
