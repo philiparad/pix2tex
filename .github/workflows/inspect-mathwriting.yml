@@ -1,0 +1,18 @@
+name: Inspect official MathWriting excerpt
+on:
+  push:
+    paths: ['.github/workflows/inspect-mathwriting.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Download official Google MathWriting excerpt (1.5 MB)
+        run: |
+          curl --retry 4 --retry-all-errors -fsSL 'https://storage.googleapis.com/mathwriting_data/mathwriting-2024-excerpt.tgz' -o /tmp/mathwriting.tgz
+          echo 'Archive sample:'
+          tar -tzf /tmp/mathwriting.tgz | head -45 || true
+          echo 'Split counts:'
+          tar -tzf /tmp/mathwriting.tgz | grep -E '/(test|valid|train)/' | sed -E 's#.*(test|valid|train)/.*#\1#' | sort | uniq -c || true
