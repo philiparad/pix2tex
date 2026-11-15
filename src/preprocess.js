@@ -23,13 +23,19 @@ export function boundsOfInk(pixels,width,height,threshold=245) {
   }
   return right<left?null:{x:left,y:top,w:right-left+1,h:bottom-top+1};
 }
-export function preprocessCanvas(source,{maxWidth=672,maxHeight=192}={}) {
+export function preprocessCanvas(source,{maxWidth=672,maxHeight=192,targetWidth=null}={}) {
   if(!source?.width||!source?.height) throw new Error('Image required');
   const context=source.getContext('2d',{willReadFrequently:true});
   const pixels=context.getImageData(0,0,source.width,source.height);
   const ink=boundsOfInk(pixels.data,source.width,source.height);
   if(!ink) throw new Error('No dark expression pixels detected in image');
-  const [width,height]=constrainSize(ink.w,ink.h,maxWidth,maxHeight);
+  let [width,height]=constrainSize(ink.w,ink.h,maxWidth,maxHeight);
+  if(targetWidth!==null){
+    if(!Number.isFinite(targetWidth)||targetWidth<32)throw new Error('Invalid resizer width');
+    const ratio=targetWidth/ink.w;
+    width=Math.max(1,Math.floor(Math.min(maxWidth,ink.w*ratio)));
+    height=Math.max(1,Math.floor(Math.min(maxHeight,ink.h*ratio)));
+  }
   const w=nextStride(Math.max(32,width)),h=nextStride(Math.max(32,height));
   const canvas=document.createElement('canvas');
   canvas.width=w;canvas.height=h;
