@@ -81,8 +81,8 @@ export async function recognizeMath(canvas,{base=DEFAULT_MODEL_BASE,onProgress=(
   // Reference RapidLaTeXOCR: preserve the original padded image, then
   // resize from that fixed image on EACH predictor iteration. The previous
   // implementation repeatedly cropped the raw input, changing model scale.
-  const base=normalized.preview;
-  let width=base.width,height=base.height,ratio=1;
+  const baseImage=normalized.preview;
+  let width=baseImage.width,height=baseImage.height,ratio=1;
   for(let attempt=0;diagnosticWidth===null&&attempt<10;attempt++){
     height=Math.max(1,Math.floor(height*ratio));
     const scaled=document.createElement('canvas');
@@ -91,7 +91,7 @@ export async function recognizeMath(canvas,{base=DEFAULT_MODEL_BASE,onProgress=(
     ctx.imageSmoothingEnabled=true;
     ctx.imageSmoothingQuality=ratio<1?'high':'medium';
     ctx.fillStyle='white';ctx.fillRect(0,0,scaled.width,scaled.height);
-    ctx.drawImage(base,0,0,scaled.width,scaled.height);
+    ctx.drawImage(baseImage,0,0,scaled.width,scaled.height);
     normalized=preprocessCanvas(scaled);
     const sizeInput=new ort.Tensor('float32',normalized.data,normalized.dims);
     const sizeOutputs=await resizer.run({[resizer.inputNames[0]]:sizeInput});
