@@ -1,0 +1,32 @@
+name: Experimental TrOCR handwriting model smoke test
+on:
+  push:
+    paths:
+      - '.github/workflows/handwriting-trocr.yml'
+      - 'src/handwriting.js'
+      - 'tests/handwriting-trocr-browser.mjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  trocr:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Chromium and Pillow
+        run: |
+          python3 -m pip install --break-system-packages pillow
+          npm install --no-save playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Prepare genuine handwritten sample
+        run: python3 scripts/fetch_official_mathwriting.py --out benchmark-fixtures --offsets 0
+      - name: Start static server
+        run: |
+          python3 -m http.server 8000 --bind 127.0.0.1 >/tmp/http.log 2>&1 &
+          sleep 2
+      - name: Run local browser MathWriting-trained TrOCR
+        run: node tests/handwriting-trocr-browser.mjs
