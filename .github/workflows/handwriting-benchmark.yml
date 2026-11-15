@@ -5,6 +5,7 @@ on:
       - '.github/workflows/handwriting-benchmark.yml'
       - 'scripts/fetch_handwriting.py'
       - 'scripts/fetch_official_mathwriting.py'
+      - 'scripts/python_reference_handwriting.py'
       - 'tests/handwriting-browser.mjs'
       - 'tests/handwriting-metrics.mjs'
   workflow_dispatch:
@@ -40,6 +41,11 @@ jobs:
           curl -fsS http://127.0.0.1:8000/ >/dev/null
       - name: Benchmark real handwriting with browser ONNX OCR
         run: node tests/handwriting-browser.mjs
+      - name: Compare upstream Python model on same handwriting PNGs
+        continue-on-error: true
+        run: |
+          python3 -m pip install --break-system-packages rapid_latex_ocr
+          python3 scripts/python_reference_handwriting.py
       - name: Publish brief result in workflow summary
         if: always()
         run: |
