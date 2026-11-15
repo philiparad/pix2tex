@@ -1,0 +1,32 @@
+name: Experimental CoMER handwriting browser smoke
+on:
+  push:
+    paths:
+      - '.github/workflows/handwriting-comer.yml'
+      - 'src/comer.js'
+      - 'tests/handwriting-comer-browser.mjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  comer:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install test dependencies
+        run: |
+          python3 -m pip install --break-system-packages pillow
+          npm install --no-save playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Prepare official handwritten sample
+        run: python3 scripts/fetch_official_mathwriting.py --out benchmark-fixtures --offsets 0
+      - name: Launch app
+        run: |
+          python3 -m http.server 8000 --bind 127.0.0.1 >/tmp/http.log 2>&1 &
+          sleep 2
+      - name: Execute real CoMER browser OCR
+        run: node tests/handwriting-comer-browser.mjs
