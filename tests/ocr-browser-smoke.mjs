@@ -1,3 +1,4 @@
+import { writeFileSync } from 'node:fs';
 // Real browser ONNX smoke test. Runs separately from fast unit checks.
 // This test downloads actual model weights. It does NOT establish accuracy.
 import { chromium } from 'playwright';
@@ -16,6 +17,7 @@ try{
     document.body.prepend(target);
   });
   const bytes=await page.locator('#golden-formula').screenshot();
+  writeFileSync('/tmp/pix2tex-benchmark.png',bytes);
   const base64=bytes.toString('base64');
   const result=await page.evaluate(async(base64)=>{
     const {recognizeMath}=await import('/src/onnx.js');
