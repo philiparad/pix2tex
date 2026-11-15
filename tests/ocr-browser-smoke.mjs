@@ -42,7 +42,7 @@ try{
 
   // Additional real-model quality probes. Record outputs without asserting
   // exact LaTeX spelling until the corpus and equivalence rules are validated.
-  for(const formula of ['x^{2}+1=0',String.raw\`\frac{x}{2}\`,String.raw\`\sqrt{x+1}\`]){
+  for(const formula of ['x^{2}+1=0',String.raw`\frac{x}{2}`,String.raw`\sqrt{x+1}`]){
     await page.evaluate(formula=>{
       document.getElementById('golden-formula').replaceChildren(MathJax.tex2svg(formula));
     },formula);
