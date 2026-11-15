@@ -38,5 +38,5 @@ try{
   console.log('Browser tensor shape:',result.tensor.dims,'first 8 values:',result.tensor.data.slice(0,8));
   console.log('Actual model OCR result:',JSON.stringify({latex:result.latex,progress:result.progress}));
   if(!result.latex||typeof result.latex!=='string')throw new Error('Empty OCR result');
-  if(result.latex.replace(/\\s+/g,'')!=='x+1=2')throw new Error('OCR correctness regression: expected x+1=2, got '+result.latex);
+  if(result.latex.replace(/\s+/g,'')!=='x+1=2')throw new Error('OCR correctness regression: expected x+1=2, got '+result.latex);
 }finally{await browser.close();}
