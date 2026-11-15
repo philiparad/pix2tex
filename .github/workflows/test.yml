@@ -1,0 +1,30 @@
+name: Static and OCR contract checks
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/app.js
+          node --check src/image.js
+          node --check src/preprocess.js
+          node --check src/decoder.js
+          node --check src/onnx.js
+      - name: Run pure JS tests
+        run: npm test
+      - name: Check Pages entrypoint
+        run: |
+          test -f index.html
+          test -f .nojekyll
+          test -f style.css
