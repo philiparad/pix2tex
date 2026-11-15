@@ -46,6 +46,18 @@ jobs:
           initial_tensor,_=model.pre_process(initial_image,1,initial_image.size[0],initial_image.size[1])
           predicted=model.image_resizer([initial_tensor.astype(np.float32)])[0]
           print('Python initial image size:',pad.size,initial_image.size,'tensor:',initial_tensor.shape,'mean:',initial_tensor.mean(),'predicted width:',(np.argmax(predicted)+1)*32)
+          h=initial_image.size[1]
+          w=initial_image.size[0]
+          ratio=1
+          for i in range(5):
+              h=int(h*ratio)
+              tensor,pad_step=model.pre_process(initial_image,ratio,w,h)
+              size_scores=model.image_resizer([tensor.astype(np.float32)])[0]
+              proposed=(int(np.argmax(size_scores))+1)*32
+              print('Python resize step',i+1,'tensor',tensor.shape,'mean',round(float(tensor.mean()),6),'pad',pad_step.size,'predicted',proposed)
+              if proposed==pad_step.size[0]: break
+              w=proposed
+              ratio=w/pad_step.size[0]
           ref=model.loop_image_resizer(raw)
           browser=json.load(open('/tmp/pix2tex-browser-tensor.json'))
           js=np.array(browser['data'],dtype=np.float32).reshape(browser['dims'])
