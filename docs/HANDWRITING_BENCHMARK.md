@@ -16,12 +16,14 @@ Measure **genuine human handwriting** recognition by the *browser* ONNX engine, 
 | HWR-008 | Classroom-photo/handwriting acceptance set | Consent, privacy, stratification, multiple writers |
 
 ## Dataset
-**Primary:** [MathWriting-human](https://huggingface.co/datasets/deepcopy/MathWriting-human), config `default`, split `test`. Source includes genuine handwritten equations, raster images and reference LaTeX. Images are obtained on demand from Hugging Face's dataset viewer API, **not** copied into the repository. Sampling is determined by explicit fixed row offsets; never select samples based on model correctness.
+**Primary:** [Google's official MathWriting excerpt](https://github.com/google-research/google-research/tree/master/mathwriting), split `test`. The official 1.5 MB excerpt contains 101 human-written InkML test files. Each is rasterized to PNG with documented stroke scaling (not a font), and labeled from the InkML `normalizedLabel`. The dataset is **CC BY-NC-SA 4.0**, and the source archive's SHA-256 is recorded. Samples are chosen by fixed indices in the sorted list of test InkML filenames, never by how well the model performs. Images and InkML are not committed.
+
+**Alternate data source:** [MathWriting-human](https://huggingface.co/datasets/deepcopy/MathWriting-human) test split, with separate downloader `scripts/fetch_handwriting.py`. This source has experienced repeated HTTP 502/503 errors in CI; it is not the default.
 
 **Secondary:** [CROHME 2019](https://tc11.cvc.uab.es/datasets/ICDAR2019-CROHME-TDF_1), original competition dataset, noncommercial CC BY-NC-SA 3.0. Store only user-provided/authorized files locally; don't mirror the dataset without verifying rights.
 
 ## Protocol
-1. Run `python3 scripts/fetch_handwriting.py --out benchmark-fixtures --offsets 0,3,7,11,19,27`. It downloads original image bytes and creates `manifest.json`, including source URL, split, row ID, SHA-256, and expected LaTeX.
+1. Run `python3 scripts/fetch_official_mathwriting.py --out benchmark-fixtures --offsets 0,3,7,11,19,27`. It downloads the official excerpt, rasterizes real `test/` InkML strokes, and creates `manifest.json`, recording the source, split, sample ID, SHA-256, and expected LaTeX.
 2. Serve repository via `python3 -m http.server 8000`.
 3. Run `node tests/handwriting-browser.mjs` under Playwright. Each image is processed with `recognizeMath()` (the production ONNX path). No replacement or mocked recognition.
 4. Review `benchmark-results/handwriting-results.json` and `handwriting-summary.md`. Keep distinct `inference_errors`, *exact match* and CER. Fail if the dataset cannot be retrieved or zero images were actually inferred.
