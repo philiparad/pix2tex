@@ -41,6 +41,11 @@ jobs:
           model=LaTeXOCR()
           print('Python baseline:',model('/tmp/pix2tex-benchmark.png'))
           raw=np.array(Image.open('/tmp/pix2tex-benchmark.png').convert('RGB'))
+          pad=model.pre_pro.pad(Image.fromarray(raw))
+          initial_image=model.pre_pro.minmax_size(pad).convert('RGB')
+          initial_tensor,_=model.pre_process(initial_image,1,initial_image.size[0],initial_image.size[1])
+          predicted=model.image_resizer([initial_tensor.astype(np.float32)])[0]
+          print('Python initial image size:',pad.size,initial_image.size,'tensor:',initial_tensor.shape,'mean:',initial_tensor.mean(),'predicted width:',(np.argmax(predicted)+1)*32)
           ref=model.loop_image_resizer(raw)
           browser=json.load(open('/tmp/pix2tex-browser-tensor.json'))
           js=np.array(browser['data'],dtype=np.float32).reshape(browser['dims'])
