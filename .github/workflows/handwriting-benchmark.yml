@@ -1,5 +1,8 @@
 name: Handwritten math OCR benchmark (real human images)
 on:
+  push:
+    paths:
+      - '.github/workflows/handwriting-benchmark.yml'
   workflow_dispatch:
     inputs:
       offsets:
