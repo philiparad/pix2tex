@@ -3,7 +3,7 @@
  * Conservative whitespace splitting: never split on an ordinary single
  * row gap inside a fraction, radical or superscript.
  */
-export function segmentInkRows(rgba,width,height,{threshold=238,minGap=14,padding=5,minInk=5}={}) {
+export function segmentInkRows(rgba,width,height,{threshold=238,minGap=25,padding=5,minInk=5}={}) {
   if(!Number.isInteger(width)||!Number.isInteger(height)||width<1||height<1||
      rgba.length!==width*height*4)throw new Error('Invalid RGBA image');
   const rowInk=new Uint32Array(height);
