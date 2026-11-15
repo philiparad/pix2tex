@@ -21,6 +21,7 @@ try{
   const base64=bytes.toString('base64');
   const result=await page.evaluate(async(base64)=>{
     const {recognizeMath}=await import('/src/onnx.js');
+    const {preprocessCanvas}=await import('/src/preprocess.js');
     const image=new Image();image.src='data:image/png;base64,'+base64;
     await image.decode();
     const c=document.createElement('canvas');c.width=image.width;c.height=image.height;
@@ -28,8 +29,11 @@ try{
     x.drawImage(image,0,0);
     const progress=[];
     const latex=await recognizeMath(c,{maxTokens:80,onProgress:message=>{if(progress.length<24)progress.push(message)}});
-    return {latex,progress};
+    const tensor=preprocessCanvas(c,{targetWidth:160});
+    return {latex,progress,tensor:{dims:tensor.dims,data:Array.from(tensor.data)}};
   },base64);
-  console.log('Actual model OCR result:',JSON.stringify(result));
+  writeFileSync('/tmp/pix2tex-browser-tensor.json',JSON.stringify(result.tensor));
+  console.log('Browser tensor shape:',result.tensor.dims,'first 8 values:',result.tensor.data.slice(0,8));
+  console.log('Actual model OCR result:',JSON.stringify({latex:result.latex,progress:result.progress}));
   if(!result.latex||typeof result.latex!=='string')throw new Error('Empty OCR result');
 }finally{await browser.close();}
