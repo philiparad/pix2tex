@@ -27,7 +27,7 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Download fixed, real-human handwriting TEST samples
         run: |
-          python3 scripts/fetch_handwriting.py --out benchmark-fixtures --offsets "${{ inputs.offsets }}"
+          python3 scripts/fetch_handwriting.py --out benchmark-fixtures --offsets "${{ inputs.offsets || '0,3,7,11,19,27' }}"
           python3 -c "import json; m=json.load(open('benchmark-fixtures/manifest.json')); assert len(m['items'])>0; assert m['split']=='test'"
       - name: Start static application
         run: |
