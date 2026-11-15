@@ -7,7 +7,7 @@ const root=process.env.BENCH_FIXTURE_DIR||'benchmark-fixtures';
 const out=process.env.BENCH_RESULT_DIR||'benchmark-results';
 const origin=process.env.BENCH_ORIGIN||'http://127.0.0.1:8000';
 const manifest=JSON.parse(await readFile(root+'/manifest.json','utf8'));
-if(manifest.split!=='test'||manifest.dataset!=='deepcopy/MathWriting-human'||!Array.isArray(manifest.items)||!manifest.items.length)
+if(manifest.split!=='test'||!['deepcopy/MathWriting-human','google/mathwriting-2024-excerpt'].includes(manifest.dataset)||!Array.isArray(manifest.items)||!manifest.items.length)
   throw new Error('A nonempty real MathWriting TEST manifest is required');
 const browser=await chromium.launch({headless:true,args:['--disable-dev-shm-usage']});
 const results=[];
