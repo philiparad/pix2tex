@@ -6,6 +6,8 @@ import argparse
 import hashlib
 import io
 import json
+import time
+from urllib.error import HTTPError, URLError
 from pathlib import Path
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
@@ -17,8 +19,19 @@ API = "https://datasets-server.huggingface.co/rows"
 
 def get_bytes(url):
     request = Request(url, headers={"User-Agent": "pix2tex-handwriting-benchmark/1.0"})
-    with urlopen(request, timeout=65) as response:
-        return response.read()
+    for attempt in range(5):
+        try:
+            with urlopen(request, timeout=65) as response:
+                return response.read()
+        except (HTTPError, URLError, TimeoutError) as exc:
+            if isinstance(exc, HTTPError) and exc.code not in (429, 500, 502, 503, 504):
+                raise
+            if attempt == 4:
+                raise
+            delay = 2 ** attempt
+            print(f"Transient download problem ({exc}); retrying in {delay}s", flush=True)
+            time.sleep(delay)
+    raise RuntimeError("Unreachable download code")
 
 def fetch(offsets, output):
     from PIL import Image
@@ -30,14 +43,19 @@ def fetch(offsets, output):
         "sampling": "fixed row indices (preselected, not model-selected)",
         "items": [],
     }
+    # One metadata request for all offsets reduces server load and retries.
+    start = min(offsets)
+    stop = max(offsets) + 1
+    if stop - start > 100:
+        raise ValueError("Fixed offsets must lie within one 100-row window")
+    params = urlencode({"dataset": DATASET, "config": CONFIG, "split": SPLIT,
+                        "offset": start, "length": stop - start})
+    payload = json.loads(get_bytes(API + "?" + params))
+    by_index = {item["row_idx"]: item["row"] for item in payload.get("rows", [])}
     for row_index in offsets:
-        params = urlencode({"dataset": DATASET, "config": CONFIG, "split": SPLIT,
-                            "offset": row_index, "length": 1})
-        payload = json.loads(get_bytes(API + "?" + params))
-        rows = payload.get("rows") or []
-        if len(rows) != 1 or rows[0].get("row_idx") != row_index:
+        if row_index not in by_index:
             raise ValueError(f"Missing expected test row {row_index}")
-        row = rows[0]["row"]
+        row = by_index[row_index]
         expected = row.get("latex")
         image_info = row.get("image")
         if not isinstance(expected, str) or not expected.strip():
