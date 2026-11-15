@@ -1,6 +1,6 @@
 # pix2tex Browser — Teacher-Board integration
 
-**Status: v0.2 experimental browser inference.** The real ONNX encoder and iterative decoder are wired into the interface. Static checks pass, but actual model execution and formula recognition quality have not yet been verified against reference images. This repository is intended for a browser-only image-to-LaTeX converter hosted as static files on GitHub Pages.
+**Status: v0.3 working experimental browser mathematical OCR.** Real ONNX inference and four MathJax-rendered PNG fixtures have passed in headless Chromium. Wider accuracy, handwriting, mobile browsers, and Teacher-Board insertion remain to be validated. This repository is intended for a browser-only image-to-LaTeX converter hosted as static files on GitHub Pages.
 
 ## Implemented
 
@@ -13,7 +13,7 @@
 
 ## Experimental inference implementation
 
-The Recognize button now attempts true image-to-LaTeX inference locally: crop → grayscale + stride-32 image normalization → ONNX encoder → decoder tokens until EOS → BPE vocabulary decode → MathJax preview. It never substitutes a fake recognition result. The pipeline has **not yet passed real-model browser integration tests**, and its preprocessing is still being calibrated against the original Python reference. The optional image-size predictor model has not yet been incorporated; this can affect recognition quality. Errors are displayed when model loading or inference fails.
+The Recognize button executes real local image-to-LaTeX recognition: crop → grayscale and stride-32 normalization → ONNX image-size predictor → multi-scale candidates → ONNX encoder → decoder until EOS → BPE vocabulary decode → MathJax preview. It never substitutes fake OCR. A real Chromium test has validated four simple mathematical expressions, with Python reference agreement on one fixture. Browser preprocessing does not yet exactly match Pillow; multiple nearby widths are scored by the decoder as a mitigation. **Handwriting and broad accuracy remain unverified.** Errors are displayed if loading or inference fails.
 
 Use the model directory input to supply the pinned Hugging Face model URL (preconfigured), or host a verified model locally. Initial weights are approximately **179 MB** and require an internet connection. Runtime memory use can be much higher.
 
@@ -80,3 +80,9 @@ For embedded cross-origin origins, define and validate an explicit allowlist and
 ## Security notes
 
 Images are processed in memory and not uploaded by application code. ONNX runtime, MathJax scripts and optional weights currently refer to third-party origins and therefore require an internet connection on first load. Use pinned/self-hosted assets before claiming an offline release.
+
+## Verified real-model results
+
+The dedicated GitHub Actions workflow [Real ONNX browser smoke test](.github/workflows/ocr-browser.yml) loads actual models in Chromium. Its fixtures cover a linear equation, an exponent, a fraction, and a square root; all four produced the expected LaTeX in the first verified run. A later commit added strict assertions for all four. The original Python model was run on the same linear-equation PNG and returned the same expression.
+
+Please do not equate this small sample with general accuracy. Before classroom rollout, test handwritten formulas, photographed worksheets, long fractions, matrices, systems, roots, and ambiguous notation on actual student material.
