@@ -30,9 +30,11 @@ try{
     const progress=[];
     const latex=await recognizeMath(c,{maxTokens:80,diagnosticWidth:64,onProgress:message=>{if(progress.length<24)progress.push(message)}});
     const tensor=preprocessCanvas(c,{targetWidth:64});
-    return {latex,progress,tensor:{dims:tensor.dims,data:Array.from(tensor.data)}};
+    const initial=preprocessCanvas(c);
+    return {latex,progress,tensor:{dims:tensor.dims,data:Array.from(tensor.data)},initial:{dims:initial.dims,mean:initial.data.reduce((a,b)=>a+b,0)/initial.data.length}};
   },base64);
   writeFileSync('/tmp/pix2tex-browser-tensor.json',JSON.stringify(result.tensor));
+  console.log('Browser initial tensor:',result.initial);
   console.log('Browser tensor shape:',result.tensor.dims,'first 8 values:',result.tensor.data.slice(0,8));
   console.log('Actual model OCR result:',JSON.stringify({latex:result.latex,progress:result.progress}));
   if(!result.latex||typeof result.latex!=='string')throw new Error('Empty OCR result');
