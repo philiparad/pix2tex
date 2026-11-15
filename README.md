@@ -107,4 +107,10 @@ This repository now contains a **separate genuine-human handwriting benchmark**,
 
 - **Multiple printed expressions:** opt in to **Recognize separate formulas in this image**. It segments vertically separated equations and combines the recognized LaTeX in a MathJax `gathered` environment. A four-expression browser regression test passed, including a fraction and radical. This is conservative row segmentation, not full mathematical page-layout detection; use crop selection if detection groups expressions incorrectly.
 - **Handwriting:** the original RapidLaTeXOCR model matched **0/6** handwriting test expressions in both JavaScript and upstream Python. The MathWriting fine-tuned TrOCR candidate could not load its missing quantized decoder (see [model decision record](docs/HWR_MODEL_DECISION.md)). It has been disabled in the UI.
-- **CoMER candidate:** the source now includes a browser-only raster adapter in `src/comer.js` using the roughly 7.2 MB INT8 ONNX weights from `kimseungdae/ink-on`. This remains experimental until real browser loading, model-license review, and held-out accuracy checks complete.
+- **CoMER candidate:** the source now includes a browser-only raster adapter in `src/comer.js` using the roughly 7.2 MB INT8 ONNX weights from `kimseungdae/ink-on`. This remains experimental: actual browser inference has passed and an initial held-out test scored 2/6 exact (33.3%), versus 0/6 for the previous model. Wider accuracy and model-license review are still pending.
+
+### CoMER handwriting experiment (15 November 2026)
+
+The `Handwritten mathematics — CoMER INT8 (experimental)` selector uses a 7.2 MB browser-only ONNX model. On the same six official handwriting images as the previous engine, **CoMER achieved 2/6 exact, 33.7% CER and 1.2s median inference**, versus **0/6, 412.4% CER and 12.9s** for RapidLaTeXOCR. These results are an engineering comparison, not a robust population estimate. Review every recognized expression before using it in lessons.
+
+Benchmark: [CoMER comparison](docs/HWR_COMER_COMPARISON_2026-11-15.md). Model attribution and outstanding compatibility issues: [model decision record](docs/HWR_MODEL_DECISION.md).
