@@ -8,6 +8,7 @@ on:
       - 'scripts/python_reference_handwriting.py'
       - 'tests/handwriting-browser.mjs'
       - 'tests/handwriting-metrics.mjs'
+      - 'src/handwriting.js'
   workflow_dispatch:
     inputs:
       offsets:
