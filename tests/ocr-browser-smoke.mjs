@@ -39,4 +39,21 @@ try{
   console.log('Actual model OCR result:',JSON.stringify({latex:result.latex,progress:result.progress}));
   if(!result.latex||typeof result.latex!=='string')throw new Error('Empty OCR result');
   if(result.latex.replace(/\s+/g,'')!=='x+1=2')throw new Error('OCR correctness regression: expected x+1=2, got '+result.latex);
+
+  // Additional real-model quality probes. Record outputs without asserting
+  // exact LaTeX spelling until the corpus and equivalence rules are validated.
+  for(const formula of ['x^{2}+1=0',String.raw\`\frac{x}{2}\`,String.raw\`\sqrt{x+1}\`]){
+    await page.evaluate(formula=>{
+      document.getElementById('golden-formula').replaceChildren(MathJax.tex2svg(formula));
+    },formula);
+    const png=await page.locator('#golden-formula').screenshot();
+    const observed=await page.evaluate(async base64=>{
+      const {recognizeMath}=await import('/src/onnx.js');
+      const img=new Image();img.src='data:image/png;base64,'+base64;await img.decode();
+      const c=document.createElement('canvas');c.width=img.width;c.height=img.height;
+      c.getContext('2d',{willReadFrequently:true}).drawImage(img,0,0);
+      return recognizeMath(c,{maxTokens:100});
+    },png.toString('base64'));
+    console.log('OCR quality probe:',JSON.stringify({formula,observed}));
+  }
 }finally{await browser.close();}
