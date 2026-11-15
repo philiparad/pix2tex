@@ -10,8 +10,8 @@ const make=(width,height,rects)=>{
  return rgba;
 };
 test('four separated equations are detected in top-down order',()=>{
- const rects=[{x:4,y:4,w:25,h:9},{x:5,y:39,w:25,h:9},{x:6,y:75,w:17,h:13},{x:5,y:110,w:24,h:10}];
- const bands=segmentInkRows(make(50,130,rects),50,130);
+ const rects=[{x:4,y:4,w:25,h:9},{x:5,y:39,w:25,h:9},{x:6,y:75,w:17,h:13},{x:5,y:122,w:24,h:10}];
+ const bands=segmentInkRows(make(50,145,rects),50,145);
  assert.equal(bands.length,4);
  assert.ok(bands.every((b,i)=>i===0||b.y>bands[i-1].y));
 });
