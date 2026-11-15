@@ -5,6 +5,9 @@ on:
       - '.github/workflows/ocr-browser.yml'
       - 'src/onnx.js'
       - 'src/preprocess.js'
+      - 'src/segment.js'
+      - 'src/app.js'
+      - 'tests/segment.test.mjs'
       - 'tests/ocr-browser-smoke.mjs'
   workflow_dispatch:
 permissions:
