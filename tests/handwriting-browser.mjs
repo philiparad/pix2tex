@@ -39,7 +39,7 @@ try{
         ctx.fillStyle='white';ctx.fillRect(0,0,canvas.width,canvas.height);
         ctx.drawImage(bitmap,0,0);bitmap.close();
         const {recognizeMath}=await import('/src/onnx.js');
-        return await recognizeMath(canvas);
+        return await recognizeMath(canvas,{maxTokens:128});
       },root+'/'+sample.file);
       if(typeof predicted!=='string'||!predicted.trim())throw new Error('Empty model result');
       entry.predicted=predicted;
