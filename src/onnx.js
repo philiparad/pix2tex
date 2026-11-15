@@ -97,7 +97,7 @@ export async function recognizeMath(canvas,{base=DEFAULT_MODEL_BASE,onProgress=(
     const sizeOutputs=await resizer.run({[resizer.inputNames[0]]:sizeInput});
     const scores=firstOutput(resizer,sizeOutputs);
     const predictedWidth=(lastTokenArgmax(scores)+1)*32;
-    onProgress('Size iteration '+(attempt+1)+': '+predictedWidth+'px (tensor '+normalized.width+'×'+normalized.height+')');
+    onProgress('Size iteration '+(attempt+1)+': '+predictedWidth+'px (tensor '+normalized.width+'×'+normalized.height+', mean '+(normalized.data.reduce((a,b)=>a+b,0)/normalized.data.length).toFixed(4)+')');
     width=Math.min(672,Math.max(32,predictedWidth));
     if(predictedWidth===normalized.width)break;
     ratio=width/normalized.width;
