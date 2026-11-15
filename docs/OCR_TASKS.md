@@ -13,10 +13,10 @@ The original RapidLaTeXOCR implementation is the reference for normalization (me
 | OCR-005 | Tokenizer + decoder tests | Golden token sequence and termination tests | Unit tests + 4 printed MathJax image fixtures passing |
 | OCR-006 | Pin release model checksums | Verify source integrity and file digest | Pending |
 | OCR-007 | Compare Python baseline on fixed images | Accuracy + tensor parity report | Python/browser output agree on x+1=2; exact tensor parity pending |
-| OCR-008 | Browser UI regression + loading/progress | Chrome/Edge/Firefox, first/second load | Headless Chromium OCR passes; UI and other browsers pending |
+| OCR-008 | Browser UI regression + loading/progress | Chrome/Edge/Firefox, first/second load | Chromium upload/button/MathJax round-trip passed; Edge/Firefox/mobile pending |
 | OCR-009 | GPU performance, cancellation | WebGPU fallback to WASM, timeout | Pending |
-| OCR-010 | Teacher-Board integration | Authenticated message origin, insertion test | Pending |
-| OCR-011 | GitHub Pages E2E CI | Live image→LaTeX tests and deployment monitoring | CI: static checks and 4 real ONNX fixtures; production deployed-site checks pending |
+| OCR-010 | Teacher-Board integration | Authenticated message origin, insertion test | Same-origin popup message contract passed; Teacher-Board host insertion pending |
+| OCR-011 | GitHub Pages E2E CI | Live image→LaTeX tests and deployment monitoring | CI: 4 real ONNX fixtures, UI round-trip, popup message; public Pages URL test pending |
 
 Model distribution: use a pinned model revision from Hugging Face rather than checking ~179MB of weights into Git. The configured URL must be CORS-accessible. First use downloads large model assets. Model URLs must be configurable because third-party hosting can change.
 
@@ -31,3 +31,7 @@ GitHub Actions `Static and OCR contract checks` runs on pushes and checks JavaSc
 The Playwright/Chromium workflow ran real `image_resizer.onnx`, `encoder.onnx` and `decoder.onnx` using MathJax-rendered PNG images. Correct normalized expressions were observed for: `x+1=2`, `x^{2}+1=0`, `\\frac{x}{2}`, and `\\sqrt{x+1}`. The Python baseline also recognized `x+1=2`. Four exact-output regression assertions are now part of the slow CI suite.
 
 This evidence validates a **small, typeset-image sample**, not handwriting, broad mathematical accuracy, browser compatibility, or Teacher-Board end-to-end insertion.
+
+## Browser UI and Teacher-Board contract
+
+The headless Chromium workflow verifies that an uploaded PNG can be recognized from the UI, inserted into the editable LaTeX field, and rendered via MathJax. It also verifies a same-origin popup sends `{type:'pix2tex:result',latex:'x+1=2',source:'pix2tex-browser-lab',version:1}` to its opener. This validates the transport contract, **not** actual insertion into Teacher-Board's document model.
