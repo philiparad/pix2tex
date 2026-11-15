@@ -73,4 +73,26 @@ try{
   if(uiLatex.replace(/\s+/g,'')!=='x+1=2')throw new Error('UI OCR regression: '+uiLatex);
   await page.locator('#preview svg').first().waitFor({timeout:30000});
   console.log('UI round-trip passed:',JSON.stringify({uiLatex,mathJaxRendered:true}));
+
+  // Integration contract: a same-origin Teacher-Board-like opener receives
+  // an explicit pix2tex:result message only after the user clicks Send.
+  await page.evaluate(()=>{
+    window.__lastPix2texMessage=null;
+    window.addEventListener('message',event=>{
+      if(event.origin===location.origin && event.data?.type==='pix2tex:result')
+        window.__lastPix2texMessage=event.data;
+    });
+  });
+  const popupReady=page.waitForEvent('popup');
+  await page.evaluate(()=>window.open('./index.html','_blank'));
+  const popup=await popupReady;
+  await popup.waitForLoadState('domcontentloaded');
+  await popup.locator('#latex').fill('x+1=2');
+  await popup.locator('#insert').click();
+  await page.waitForFunction(()=>window.__lastPix2texMessage!==null,null,{timeout:10000});
+  const posted=await page.evaluate(()=>window.__lastPix2texMessage);
+  if(posted.latex!=='x+1=2'||posted.type!=='pix2tex:result')
+    throw new Error('Teacher-Board message contract mismatch: '+JSON.stringify(posted));
+  console.log('Teacher-Board messaging contract passed:',JSON.stringify(posted));
+  await popup.close();
 }finally{await browser.close();}
