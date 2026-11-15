@@ -3,6 +3,9 @@ on:
   push:
     paths:
       - '.github/workflows/handwriting-benchmark.yml'
+      - 'scripts/fetch_handwriting.py'
+      - 'tests/handwriting-browser.mjs'
+      - 'tests/handwriting-metrics.mjs'
   workflow_dispatch:
     inputs:
       offsets:
