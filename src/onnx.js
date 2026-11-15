@@ -72,13 +72,13 @@ export async function loadModel(base=DEFAULT_MODEL_BASE,onProgress=()=>{}){
 function firstOutput(session,outputs) {
   return ensureTensor(outputs[session.outputNames[0]],session.outputNames[0]);
 }
-export async function recognizeMath(canvas,{base=DEFAULT_MODEL_BASE,onProgress=()=>{},maxTokens=MAX_TOKENS}={}) {
+export async function recognizeMath(canvas,{base=DEFAULT_MODEL_BASE,onProgress=()=>{},maxTokens=MAX_TOKENS,diagnosticWidth=null}={}) {
   if(!canvas) throw new Error('Choose an image first.');
   const {ort,resizer,encoder,decoder,tokenizer}=await loadModel(base,onProgress);
   onProgress('Preparing formula image…');
   let normalized=preprocessCanvas(canvas);
   if(resizer.inputNames.length!==1)throw new Error('Unsupported resizer input signature');
-  for(let attempt=0;attempt<4;attempt++){
+  for(let attempt=0;diagnosticWidth===null&&attempt<4;attempt++){
     const sizeInput=new ort.Tensor('float32',normalized.data,normalized.dims);
     const sizeOutputs=await resizer.run({[resizer.inputNames[0]]:sizeInput});
     const scores=firstOutput(resizer,sizeOutputs);
@@ -87,6 +87,7 @@ export async function recognizeMath(canvas,{base=DEFAULT_MODEL_BASE,onProgress=(
     if(Math.abs(predictedWidth-normalized.width)<32)break;
     normalized=preprocessCanvas(canvas,{targetWidth:Math.min(672,Math.max(32,predictedWidth))});
   }
+  if(diagnosticWidth!==null)normalized=preprocessCanvas(canvas,{targetWidth:diagnosticWidth});
   const input=new ort.Tensor('float32',normalized.data,normalized.dims);
   if(encoder.inputNames.length!==1) throw new Error('Unsupported encoder input signature: '+encoder.inputNames.join(', '));
   onProgress('Encoding image…');
