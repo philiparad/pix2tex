@@ -28,8 +28,8 @@ try{
     const x=c.getContext('2d',{willReadFrequently:true});x.fillStyle='white';x.fillRect(0,0,c.width,c.height);
     x.drawImage(image,0,0);
     const progress=[];
-    const latex=await recognizeMath(c,{maxTokens:80,onProgress:message=>{if(progress.length<24)progress.push(message)}});
-    const tensor=preprocessCanvas(c,{targetWidth:160});
+    const latex=await recognizeMath(c,{maxTokens:80,diagnosticWidth:64,onProgress:message=>{if(progress.length<24)progress.push(message)}});
+    const tensor=preprocessCanvas(c,{targetWidth:64});
     return {latex,progress,tensor:{dims:tensor.dims,data:Array.from(tensor.data)}};
   },base64);
   writeFileSync('/tmp/pix2tex-browser-tensor.json',JSON.stringify(result.tensor));
