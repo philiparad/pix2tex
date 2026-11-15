@@ -16,7 +16,7 @@ Measure **genuine human handwriting** recognition by the *browser* ONNX engine, 
 | HWR-008 | Classroom-photo/handwriting acceptance set | Consent, privacy, stratification, multiple writers |
 
 ## Dataset
-**Primary:** [Google's official MathWriting excerpt](https://github.com/google-research/google-research/tree/master/mathwriting), split `test`. The official 1.5 MB excerpt contains 101 human-written InkML test files. Each is rasterized to PNG with documented stroke scaling (not a font), and labeled from the InkML `normalizedLabel`. The dataset is **CC BY-NC-SA 4.0**, and the source archive's SHA-256 is recorded. Samples are chosen by fixed indices in the sorted list of test InkML filenames, never by how well the model performs. Images and InkML are not committed.
+**Primary:** [Google's official MathWriting excerpt](https://github.com/google-research/google-research/tree/master/mathwriting), split `test`. The official 1.5 MB excerpt contains 100 human-written InkML test files. Each is rasterized to PNG with documented stroke scaling (not a font), and labeled from the InkML `normalizedLabel`. The dataset is **CC BY-NC-SA 4.0**, and the source archive's SHA-256 is recorded. Samples are chosen by fixed indices in the sorted list of test InkML filenames, never by how well the model performs. Images and InkML are not committed.
 
 **Alternate data source:** [MathWriting-human](https://huggingface.co/datasets/deepcopy/MathWriting-human) test split, with separate downloader `scripts/fetch_handwriting.py`. This source has experienced repeated HTTP 502/503 errors in CI; it is not the default.
 
