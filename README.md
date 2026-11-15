@@ -93,8 +93,12 @@ This repository now contains a **separate genuine-human handwriting benchmark**,
 
 - Methodology, data source, metrics and limitations: [docs/HANDWRITING_BENCHMARK.md](docs/HANDWRITING_BENCHMARK.md)
 - Workflow: [Handwritten math OCR benchmark](.github/workflows/handwriting-benchmark.yml) (Actions → Run workflow)
-- First run uses six preselected **MathWriting-human test** images with labels, image hashes, and provenance. No sample is selected based on the model's predictions.
+- Default run uses six preselected **official Google MathWriting test InkML** samples, rasterized deterministically with the original labels, image hashes and provenance. No sample is selected based on the model's predictions.
 - Scores: exact LaTeX expression accuracy, character error rate, inference coverage, median/p95 latency and per-example errors. Test results are provided as GitHub Actions artifacts.
 - The workflow acquires test images temporarily and does not commit or publish source images to the repository.
 
 **Do not claim handwriting accuracy without a completed real-image benchmark.** The four previously passed examples were MathJax-typeset, not handwritten. The initial six samples are an engineering smoke benchmark, not a statistically representative accuracy estimate.
+
+### Real handwriting result (15 November 2026)
+
+**Important: the present model is not accurate enough for handwritten teaching material.** Two six-item real-handwriting evaluations produced **0/6 exact transcriptions**. The original `MathWriting-human` test set measured 1093% CER (many overlong errors); Google's official excerpt test set measured 412% CER with the 128-token diagnostic limit. Details: [HWR baseline](docs/HWR_BASELINE_2026-11-15.md) and [official baseline](docs/HWR_OFFICIAL_BASELINE_2026-11-15.md). These tiny samples are not representative accuracy estimates; validate a larger held-out set and upstream Python parity before claiming classroom readiness.
