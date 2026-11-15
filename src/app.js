@@ -1,6 +1,7 @@
 import {loadImage,extractCrop,clampSelection} from './image.js';
 import {checkModelAssets,inspectEncoder,recognizeMath,DEFAULT_MODEL_BASE} from './onnx.js';
 import {recognizeHandwriting} from './handwriting.js';
+import {splitCanvasFormulas,joinFormulaLatex} from './segment.js';
 const $=id=>document.getElementById(id);
 let image=null, selection=null, anchor=null;
 $('modelBase').value=DEFAULT_MODEL_BASE;
@@ -22,9 +23,22 @@ c.addEventListener('pointerdown',e=>{if(!image)return;anchor=loc(e);c.setPointer
 c.addEventListener('pointermove',e=>{if(!anchor)return;const p=loc(e);selection=clampSelection(anchor.x,anchor.y,p.x,p.y,c.width,c.height);render();});
 c.addEventListener('pointerup',()=>{anchor=null;if(selection&&(selection.w<4||selection.h<4))selection=null;render();});
 $('reset').onclick=()=>{selection=null;render();};
-$('recognize').onclick=async()=>{const button=$('recognize');button.disabled=true;try{status('Attempting local model inference…');const source=extractCrop(image,selection);$('latex').value=$('engine').value==='handwritten'
-  ? await recognizeHandwriting(source,{onProgress:message=>status(message)})
-  : await recognizeMath(source,{base:$('modelBase').value.trim(),onProgress:message=>status(message)});updatePreview();status('Recognition completed by local browser ONNX inference. Verify the output against your source image.');}catch(e){status('Recognition failed: '+e.message,true);}finally{button.disabled=!image;}};
+$('recognize').onclick=async()=>{const button=$('recognize');button.disabled=true;try{status('Attempting local model inference…');const source=extractCrop(image,selection);
+const recognize=canvas=>$('engine').value==='handwritten'
+  ? recognizeHandwriting(canvas,{onProgress:message=>status(message)})
+  : recognizeMath(canvas,{base:$('modelBase').value.trim(),onProgress:message=>status(message)});
+if($('splitExpressions').checked){
+  const segments=splitCanvasFormulas(source);
+  if(segments.length>20)throw new Error('Too many detected segments; crop a smaller region.');
+  const outputs=[];
+  for(let i=0;i<segments.length;i++){
+    status('Recognizing expression '+(i+1)+' of '+segments.length+'…');
+    outputs.push(await recognize(segments[i].canvas));
+  }
+  $('latex').value=joinFormulaLatex(outputs);
+}else{
+  $('latex').value=await recognize(source);
+}updatePreview();status('Recognition completed by local browser ONNX inference. Verify the output against your source image.');}catch(e){status('Recognition failed: '+e.message,true);}finally{button.disabled=!image;}};
 function updatePreview(){const value=$('latex').value.trim();const p=$('preview');p.textContent=value?`\\[${value}\\]`:'Enter LaTeX to preview.';if(value&&window.MathJax?.typesetPromise)window.MathJax.typesetPromise([p]).catch(e=>status(`MathJax: ${e.message}`,true));}
 $('latex').oninput=updatePreview;
 $('copy').onclick=async()=>{await navigator.clipboard.writeText($('latex').value);status('Copied LaTeX.');};
