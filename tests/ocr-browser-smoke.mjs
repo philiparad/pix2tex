@@ -55,5 +55,7 @@ try{
       return recognizeMath(c,{maxTokens:100});
     },png.toString('base64'));
     console.log('OCR quality probe:',JSON.stringify({formula,observed}));
+    const normalize=value=>value.replace(/\s+/g,'');
+    if(normalize(observed)!==normalize(formula))throw new Error('OCR mismatch: '+formula+' => '+observed);
   }
 }finally{await browser.close();}
