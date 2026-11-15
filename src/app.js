@@ -1,7 +1,8 @@
 import {loadImage,extractCrop,clampSelection} from './image.js';
-import {checkModelAssets,inspectEncoder,recognizeMath} from './onnx.js';
+import {checkModelAssets,inspectEncoder,recognizeMath,DEFAULT_MODEL_BASE} from './onnx.js';
 const $=id=>document.getElementById(id);
 let image=null, selection=null, anchor=null;
+$('modelBase').value=DEFAULT_MODEL_BASE;
 function status(message,error=false){$('status').textContent=message;$('status').classList.toggle('error',error);}
 function render(){const c=$('canvas');if(!image)return;c.width=image.width;c.height=image.height;c.style.display='block';$('empty').hidden=true;const ctx=c.getContext('2d');ctx.drawImage(image,0,0);if(selection&&selection.w>3&&selection.h>3){ctx.fillStyle='#0006';ctx.fillRect(0,0,c.width,c.height);ctx.clearRect(selection.x,selection.y,selection.w,selection.h);ctx.drawImage(image,selection.x,selection.y,selection.w,selection.h,selection.x,selection.y,selection.w,selection.h);ctx.strokeStyle='#007aff';ctx.lineWidth=Math.max(2,image.width/400);ctx.strokeRect(selection.x,selection.y,selection.w,selection.h);}}
 async function setImage(file){try{const newImage=await loadImage(file);image?.close();image=newImage;selection=null;$('recognize').disabled=false;render();status(`Image loaded (${image.width} × ${image.height}). Select a crop or inspect the model.`);}catch(e){status(e.message,true);}}
@@ -14,7 +15,7 @@ c.addEventListener('pointerdown',e=>{if(!image)return;anchor=loc(e);c.setPointer
 c.addEventListener('pointermove',e=>{if(!anchor)return;const p=loc(e);selection=clampSelection(anchor.x,anchor.y,p.x,p.y,c.width,c.height);render();});
 c.addEventListener('pointerup',()=>{anchor=null;if(selection&&(selection.w<4||selection.h<4))selection=null;render();});
 $('reset').onclick=()=>{selection=null;render();};
-$('recognize').onclick=async()=>{try{status('Attempting local model inference…');const source=extractCrop(image,selection);$('latex').value=await recognizeMath(source);updatePreview();status('Recognition completed.');}catch(e){status(e.message,true);}};
+$('recognize').onclick=async()=>{try{status('Attempting local model inference…');const source=extractCrop(image,selection);$('latex').value=await recognizeMath(source,{base:$('modelBase').value.trim(),onProgress:message=>status(message)});updatePreview();status('Recognition completed by local browser ONNX inference. Verify the output against your source image.');}catch(e){status('Recognition failed: '+e.message,true);}};
 function updatePreview(){const value=$('latex').value.trim();const p=$('preview');p.textContent=value?`\\[${value}\\]`:'Enter LaTeX to preview.';if(value&&window.MathJax?.typesetPromise)window.MathJax.typesetPromise([p]).catch(e=>status(`MathJax: ${e.message}`,true));}
 $('latex').oninput=updatePreview;
 $('copy').onclick=async()=>{await navigator.clipboard.writeText($('latex').value);status('Copied LaTeX.');};
