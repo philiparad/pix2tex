@@ -12,7 +12,7 @@ permissions:
 jobs:
   real-onnx:
     runs-on: ubuntu-24.04
-    timeout-minutes: 18
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -29,3 +29,11 @@ jobs:
           curl -f http://127.0.0.1:8000/index.html >/dev/null
       - name: Recognize formula using actual ONNX models
         run: node tests/ocr-browser-smoke.mjs
+      - name: Compare original Python RapidLaTeXOCR model
+        continue-on-error: true
+        run: |
+          python3 -m pip install --break-system-packages rapid_latex_ocr
+          python3 - <<'PY'
+          from rapid_latex_ocr import LaTeXOCR
+          print('Python baseline:', LaTeXOCR()('/tmp/pix2tex-benchmark.png'))
+          PY
