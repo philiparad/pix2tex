@@ -1,5 +1,6 @@
 import {BOS,EOS,MAX_TOKENS,lastTokenArgmax,decodeTokens,cleanLatex,ensureTensor,modelInputFeed} from './decoder.js';
 import {preprocessCanvas} from './preprocess.js';
+import {resizeLanczosCanvas} from './lanczos.js';
 
 // Re-hosted unmodified RapidLaTeXOCR weights, pinned to a public revision.
 // This URL is configurable in the UI; image contents are NEVER uploaded here.
@@ -85,13 +86,7 @@ export async function recognizeMath(canvas,{base=DEFAULT_MODEL_BASE,onProgress=(
   let width=baseImage.width,height=baseImage.height,ratio=1;
   for(let attempt=0;diagnosticWidth===null&&attempt<10;attempt++){
     height=Math.max(1,Math.floor(height*ratio));
-    const scaled=document.createElement('canvas');
-    scaled.width=Math.max(1,width);scaled.height=height;
-    const ctx=scaled.getContext('2d',{willReadFrequently:true});
-    ctx.imageSmoothingEnabled=true;
-    ctx.imageSmoothingQuality=ratio<1?'high':'medium';
-    ctx.fillStyle='white';ctx.fillRect(0,0,scaled.width,scaled.height);
-    ctx.drawImage(baseImage,0,0,scaled.width,scaled.height);
+    const scaled=resizeLanczosCanvas(baseImage,Math.max(1,width),height);
     normalized=preprocessCanvas(scaled);
     const sizeInput=new ort.Tensor('float32',normalized.data,normalized.dims);
     const sizeOutputs=await resizer.run({[resizer.inputNames[0]]:sizeInput});
