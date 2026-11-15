@@ -1,6 +1,6 @@
 # pix2tex Browser — Teacher-Board integration
 
-**Status: v0.1 development starter, not yet a working OCR implementation.** This repository is intended for a browser-only image-to-LaTeX converter hosted as static files on GitHub Pages.
+**Status: v0.2 experimental browser inference.** The real ONNX encoder and iterative decoder are wired into the interface. Static checks pass, but actual model execution and formula recognition quality have not yet been verified against reference images. This repository is intended for a browser-only image-to-LaTeX converter hosted as static files on GitHub Pages.
 
 ## Implemented
 
@@ -11,9 +11,13 @@
 - ONNX asset checks and encoder session metadata diagnostics using ONNX Runtime Web.
 - Node built-in unit tests for crop selection.
 
-## NOT YET implemented
+## Experimental inference implementation
 
-**The Recognize button intentionally reports that model inference is missing.** The exact preprocessing, model tensor signatures, autoregressive decoder loop, tokenizer handling, and EOS behavior require validation against an ONNX export. The project does not pretend that typed LaTeX was recognized from a photograph.
+The Recognize button now attempts true image-to-LaTeX inference locally: crop → grayscale + stride-32 image normalization → ONNX encoder → decoder tokens until EOS → BPE vocabulary decode → MathJax preview. It never substitutes a fake recognition result. The pipeline has **not yet passed real-model browser integration tests**, and its preprocessing is still being calibrated against the original Python reference. The optional image-size predictor model has not yet been incorporated; this can affect recognition quality. Errors are displayed when model loading or inference fails.
+
+Use the model directory input to supply the pinned Hugging Face model URL (preconfigured), or host a verified model locally. Initial weights are approximately **179 MB** and require an internet connection. Runtime memory use can be much higher.
+
+See [sequenced implementation backlog](docs/OCR_TASKS.md).
 
 ## Model source and attribution
 
@@ -27,7 +31,7 @@ Candidate hosted model files: https://huggingface.co/inYourOwnBrowser/rapid-late
 
 Run `python -m http.server 8000` then visit http://localhost:8000. Tests: `node --test tests/*.test.mjs`.
 
-To check assets, place files in `models/`, then select Check model assets or Inspect ONNX encoder. The model files can also be served from a trusted CORS-enabled URL, but same-origin hosting is recommended for reliability.
+To check assets, keep the default pinned URL or place files in `models/` and change the model directory to `./models/`, then select Check model assets or Inspect ONNX encoder. The model files can also be served from a trusted CORS-enabled URL, but same-origin hosting is recommended for reliability.
 
 ## Deployment
 
@@ -65,10 +69,10 @@ For embedded cross-origin origins, define and validate an explicit allowlist and
 
 ## Next implementation milestones
 
-1. Pin model export revision and record SHA256 checksums.
-2. Reproduce pix2tex preprocessing (including resize, padding, grayscale inversion and exact normalization) against Python baseline.
-3. Inspect all ONNX input/output tensor types and dimensions; implement encoder and optional resizer.
-4. Implement autoregressive decoder with proper shape handling, masks, BOS/EOS, tokenization and generation limits.
+1. Record and verify SHA256 checksums of all ONNX assets and tokenizer.
+2. Compare browser preprocessing to RapidLaTeXOCR Python preprocessing pixel-by-pixel, including size-predictor model.
+3. Run live ONNX sessions, inspect tensor signatures, and fix any model input/output contract mismatch.
+4. Validate ONNX decoder, masks, BOS/EOS, tokenization, and generation limits on a real benchmark.
 5. Implement WASM fallback, optional WebGPU acceleration, and progress reporting.
 6. Add image/LaTeX gold fixtures; measure character and expression accuracy, latency, memory, and MathJax compatibility.
 7. Implement crop-to-board flow after recognition is validated.
