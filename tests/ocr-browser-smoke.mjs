@@ -80,7 +80,7 @@ try{
   await page.evaluate(()=>{
     const block=document.getElementById('golden-formula');
     block.replaceChildren();
-    for(const formula of ['x+1=2','x^{2}+1=0',String.raw`\\frac{x}{2}`,String.raw`\\sqrt{x+1}`]){
+    for(const formula of ['x+1=2','x^{2}+1=0',String.raw`\frac{x}{2}`,String.raw`\sqrt{x+1}`]){
       const div=document.createElement('div');
       div.style.cssText='margin:0 0 30px 0;padding:0';
       div.appendChild(MathJax.tex2svg(formula));
@@ -96,12 +96,12 @@ try{
     return s.includes('Recognition completed')||s.includes('Recognition failed');
   },null,{timeout:180000});
   const grouped=await page.locator('#latex').inputValue();
-  const clean=value=>value.replace(/\\s+/g,'');
-  for(const expected of ['x+1=2','x^{2}+1=0',String.raw`\\frac{x}{2}`,String.raw`\\sqrt{x+1}`]){
+  const clean=value=>value.replace(/\s+/g,'');
+  for(const expected of ['x+1=2','x^{2}+1=0',String.raw`\frac{x}{2}`,String.raw`\sqrt{x+1}`]){
     if(!clean(grouped).includes(clean(expected)))
       throw new Error('Multi-expression OCR lost '+expected+': '+grouped);
   }
-  if(!grouped.includes('\\\\begin{gathered}'))
+  if(!grouped.includes('\\begin{gathered}'))
     throw new Error('Multiple formulas must be grouped in valid LaTeX');
   console.log('MULTI_EXPRESSION_UI_PASSED',JSON.stringify({grouped}));
   await page.locator('#splitExpressions').uncheck();
