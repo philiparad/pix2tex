@@ -1,0 +1,6 @@
+# Benchmark data: images are obtained on demand and are not redistributed.
+benchmark-fixtures/
+benchmark-results/
+node_modules/
+.DS_Store
+*.log
