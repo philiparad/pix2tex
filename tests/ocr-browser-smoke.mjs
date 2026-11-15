@@ -58,4 +58,19 @@ try{
     const normalize=value=>value.replace(/\s+/g,'');
     if(normalize(observed)!==normalize(formula))throw new Error('OCR mismatch: '+formula+' => '+observed);
   }
+
+  // Full UI round-trip: real file upload -> Recognize button -> editable
+  // LaTeX field -> rendered MathJax preview. Uses cached ONNX sessions.
+  await page.locator('#file').setInputFiles({name:'equation.png',mimeType:'image/png',buffer:bytes});
+  await page.locator('#recognize').click();
+  await page.waitForFunction(()=>{
+    const status=document.getElementById('status').textContent;
+    return status.includes('Recognition completed') || status.includes('Recognition failed');
+  },null,{timeout:180000});
+  const uiStatus=await page.locator('#status').textContent();
+  if(!uiStatus.includes('Recognition completed'))throw new Error('UI recognition failed: '+uiStatus);
+  const uiLatex=await page.locator('#latex').inputValue();
+  if(uiLatex.replace(/\s+/g,'')!=='x+1=2')throw new Error('UI OCR regression: '+uiLatex);
+  await page.locator('#preview svg').first().waitFor({timeout:30000});
+  console.log('UI round-trip passed:',JSON.stringify({uiLatex,mathJaxRendered:true}));
 }finally{await browser.close();}
