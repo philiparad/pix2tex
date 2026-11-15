@@ -41,7 +41,19 @@ export function decodeTokens(tokenizerJson, ids) {
 }
 
 export function cleanLatex(text) {
-  return String(text).replace(/\s+/g,' ').trim();
+  // Keep whitespace inside text-like commands while removing tokenization
+  // spaces around mathematical punctuation.
+  const protectedGroups=[];
+  let value=String(text).replace(/\\(?:operatorname|mathrm|text|mathbf)\*?\s*\{[^{}]*\}/g,
+    match=>{
+      const index=protectedGroups.push(match)-1;
+      return 'Ⓢ'+index+'Ⓢ';
+    });
+  value=value.replace(/\s*([{}^_=+\-*\/(),])\s*/g,'$1')
+    .replace(/(\\[A-Za-z]+)\s+(?=\{)/g,'$1')
+    .replace(/([0-9])\s+([A-Za-z])/g,'$1$2')
+    .replace(/\s+/g,' ').trim();
+  return value.replace(/Ⓢ(\d+)Ⓢ/g,(_,index)=>protectedGroups[Number(index)]);
 }
 
 export function ensureTensor(tensor, label) {
