@@ -3,6 +3,9 @@ on:
   push:
     paths:
       - '.github/workflows/ocr-browser.yml'
+      - 'src/onnx.js'
+      - 'src/preprocess.js'
+      - 'tests/ocr-browser-smoke.mjs'
   workflow_dispatch:
 permissions:
   contents: read
