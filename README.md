@@ -102,3 +102,9 @@ This repository now contains a **separate genuine-human handwriting benchmark**,
 ### Real handwriting result (15 November 2026)
 
 **Important: the present model is not accurate enough for handwritten teaching material.** Two six-item real-handwriting evaluations produced **0/6 exact transcriptions**. The original `MathWriting-human` test set measured 1093% CER (many overlong errors); Google's official excerpt test set measured 412% CER with the 128-token diagnostic limit. Details: [HWR baseline](docs/HWR_BASELINE_2026-11-15.md) and [official baseline](docs/HWR_OFFICIAL_BASELINE_2026-11-15.md). These tiny samples are not representative accuracy estimates; validate a larger held-out set and upstream Python parity before claiming classroom readiness.
+
+## Multi-formula images and handwriting-model development
+
+- **Multiple printed expressions:** opt in to **Recognize separate formulas in this image**. It segments vertically separated equations and combines the recognized LaTeX in a MathJax `gathered` environment. A four-expression browser regression test passed, including a fraction and radical. This is conservative row segmentation, not full mathematical page-layout detection; use crop selection if detection groups expressions incorrectly.
+- **Handwriting:** the original RapidLaTeXOCR model matched **0/6** handwriting test expressions in both JavaScript and upstream Python. The MathWriting fine-tuned TrOCR candidate could not load its missing quantized decoder (see [model decision record](docs/HWR_MODEL_DECISION.md)). It has been disabled in the UI.
+- **CoMER candidate:** the source now includes a browser-only raster adapter in `src/comer.js` using the roughly 7.2 MB INT8 ONNX weights from `kimseungdae/ink-on`. This remains experimental until real browser loading, model-license review, and held-out accuracy checks complete.
